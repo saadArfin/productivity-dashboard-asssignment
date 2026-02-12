@@ -1,10 +1,9 @@
 
 const express = require("express");
 const router = express.Router();
-
 const db = require("../db"); 
 const { createTables } = require("../services/dbSetupService");
-const { seedData } = require("../services/seedService");
+const { seedData } = require("../services/seed/seedService");
 
 // initialize DB schema
 router.post("/setup-db", async (req, res) => {
@@ -20,8 +19,11 @@ router.post("/setup-db", async (req, res) => {
 // seed dummy data
 router.post("/seed", async (req, res) => {
   try {
-    await seedData();
-    res.json({ message: "Database seeded" });
+    // Accept either ?events=300 or ?size=heavy
+    const totalEvents = req.query.events ? Number(req.query.events) : undefined;
+    const size = req.query.size;
+    const result = await seedData({ totalEvents, size });
+    res.json({ message: "Database seeded", details: result });
   } catch (err) {
     console.error("seed error:", err);
     res.status(500).json({ error: "Seeding failed", details: err.message });
