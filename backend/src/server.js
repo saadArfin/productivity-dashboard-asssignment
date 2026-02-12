@@ -9,6 +9,7 @@ const pino = require("pino");
 const requestLogger = require("./middleware/requestLogger");
 const errorHandler = require("./middleware/errorHandler");
 const setupRoutes = require("./routes/setupRoutes");
+const eventsRoutes = require('./routes/eventsRoutes');
 
 const logger = pino();
 const app = express();
@@ -18,6 +19,7 @@ app.use(requestLogger);
 
 // Routes
 app.use("/api", setupRoutes);
+app.use('/api', eventsRoutes);
 
 // Health
 app.get("/api/health", (req, res) => {
