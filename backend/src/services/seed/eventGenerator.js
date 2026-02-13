@@ -1,16 +1,13 @@
-
 const crypto = require('crypto');
-
 
 const DEFAULT_SHIFT_DATE = '2026-01-15T09:00:00Z';
 const SHIFT_HOURS = 8;
 
-
+/** Deterministic event id so seeded data is reproducible */
 function makeEventId(ev) {
   const base = `${ev.timestamp}|${ev.worker_id || ''}|${ev.workstation_id || ''}|${ev.event_type}|${ev.count || 0}`;
   return crypto.createHash('sha256').update(base).digest('hex');
 }
-
 
 function sizeToCount(size) {
   if (!size) return 300;
@@ -21,7 +18,6 @@ function sizeToCount(size) {
   const n = Number(size);
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : 300;
 }
-
 
 function baseWorkersStations() {
   const workers = [
@@ -43,14 +39,12 @@ function baseWorkersStations() {
   return { workers, stations };
 }
 
-/*
- * generateEvents(totalTarget)
- *  totalTarget: number of events desired (approx)
- *
- * returns { workers,sstations,  events }
- * events are time ordered and each has event_id and raw_json fields.
-   */
-
+/**
+ * generateEvents(totalTarget = 300)
+ * returns { workers, stations, events }
+ *  events are time-ordered (ascending)
+ *  each event has event_id, raw_json, is_late:false by default
+ */
 function generateEvents(totalTarget = 300) {
   const { workers, stations } = baseWorkersStations();
 
@@ -70,14 +64,12 @@ function generateEvents(totalTarget = 300) {
 
     let producedForWorker = 0;
     while (t < shiftEnd && producedForWorker < perWorkerTarget) {
-      
       const blockDuration = isWorking
-        ? (20 + Math.floor(Math.random() * 71)) * 60 * 1000 
-        : (5 + Math.floor(Math.random() * 26)) * 60 * 1000; 
+        ? (20 + Math.floor(Math.random() * 71)) * 60 * 1000 // 20-90 min
+        : (5 + Math.floor(Math.random() * 26)) * 60 * 1000; // 5-30 min
 
       const obsTime = new Date(Math.min(t, shiftEnd)).toISOString();
 
-      
       const stateType = isWorking ? 'working' : 'idle';
       events.push({
         timestamp: obsTime,
@@ -86,12 +78,13 @@ function generateEvents(totalTarget = 300) {
         event_type: stateType,
         confidence: +(0.85 + Math.random() * 0.15).toFixed(3),
         count: 0,
-        model_version: 'v1.0'
+        model_version: 'v1.0',
+        is_late: false
       });
       producedForWorker++;
 
       if (isWorking) {
-        const prodEvents = 1 + Math.floor(Math.random() * 4); 
+        const prodEvents = 1 + Math.floor(Math.random() * 4); // 1-4
         for (let p = 0; p < prodEvents && producedForWorker < perWorkerTarget; p++) {
           const offset = Math.floor(Math.random() * blockDuration);
           const productTs = new Date(Math.min(t + offset, shiftEnd)).toISOString();
@@ -101,8 +94,9 @@ function generateEvents(totalTarget = 300) {
             workstation_id: station.workstation_id,
             event_type: 'product_count',
             confidence: +(0.85 + Math.random() * 0.15).toFixed(3),
-            count: 1 + Math.floor(Math.random() * 3), 
-            model_version: 'v1.0'
+            count: 1 + Math.floor(Math.random() * 3), // 1-3 units
+            model_version: 'v1.0',
+            is_late: false
           });
           producedForWorker++;
         }
@@ -124,13 +118,15 @@ function generateEvents(totalTarget = 300) {
       event_type: 'product_count',
       confidence: +(0.85 + Math.random() * 0.15).toFixed(3),
       count: 1 + Math.floor(Math.random() * 3),
-      model_version: 'v1.0'
+      model_version: 'v1.0',
+      is_late: false
     });
   }
 
+  //sort events by timestamp(ascending)
   events.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-
+  //attach deterministic event_id and raw_json
   const withIds = events.map(e => {
     const ev = { ...e };
     ev.event_id = makeEventId(ev);
