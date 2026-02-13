@@ -1,8 +1,8 @@
-const db = require('../db');
+const db = require('../../db');
 const pino = require('pino');
 const Sentry = require('@sentry/node');
 const logger = pino();
-const { checkIfLateSingle } = require('./lateEventService');
+const { checkIfLateSingle } = require('../utils/lateEventService');
 
 /**
  * insertSingleEvent(ev)

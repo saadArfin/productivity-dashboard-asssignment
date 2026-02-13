@@ -1,5 +1,5 @@
 
-const db = require('../db');
+const db = require('../../db');
 const pino = require('pino');
 const Sentry = require('@sentry/node');
 const logger = pino();
@@ -22,7 +22,7 @@ async function getLatestMapForPairs(pairs = []) {
   const keys = Array.from(uniq.values());
   if (keys.length === 0) return new Map();
 
-  //build WHERE clause (worker_id = $1 AND workstation_id = $2) OR ...
+  //build WHERE clause (worker_id = $1 AND workstation_id = $2) or ...
   const whereClauses = [];
   const params = [];
   let idx = 1;

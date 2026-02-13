@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db"); 
-const { createTables } = require("../services/dbSetupService");
+const { createTables } = require("../services/db/dbSetupService");
 const { seedData } = require("../services/seed/seedService");
 
 // initialize DB schema

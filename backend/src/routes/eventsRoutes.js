@@ -1,9 +1,9 @@
 
 const express = require('express');
 const router = express.Router();
-const { validateAndNormalizeEvent } = require('../services/validators');
-const { insertSingleEvent } = require('../services/ingestService');
-const { insertBulkEvents } = require('../services/ingestBulkService');
+const { validateAndNormalizeEvent } = require('../services/utils/validators');
+const { insertSingleEvent } = require('../services/ingest/ingestService');
+const { insertBulkEvents } = require('../services/ingest/ingestBulkService');
 const pino = require('pino');
 const Sentry = require('@sentry/node');
 const logger = pino();

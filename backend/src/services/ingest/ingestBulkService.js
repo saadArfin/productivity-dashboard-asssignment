@@ -1,8 +1,8 @@
-const db = require('../db');
+const db = require('../../db');
 const pino = require('pino');
 const Sentry = require('@sentry/node');
-const { validateEventSafe } = require('./validators');
-const { getLatestMapForPairs } = require('./lateEventService');
+const { validateEventSafe } = require('../utils/validators');
+const { getLatestMapForPairs } = require('../utils/lateEventService');
 
 const logger = pino();
 

@@ -2,17 +2,17 @@ const pino = require('pino');
 const logger = pino();
 
 const db = require('../../db'); 
-const { createTables } = require('../dbSetupService'); 
+const { createTables } = require('../db/dbSetupService'); 
 const { generateEvents, sizeToCount } = require('./eventGenerator');
 
 /**
  * Seed the DB with workers, stations and generated events
  * options: { totalEvents: number } OR { size: 'light'|'medium'|'heavy' }
  *
- * - truncates recompute_requests as well
- * - inserts events including is_late column (default false for seeded data)
- * - uses RETURNING to get actual inserted rows
- * - writes ingestion_log entries for inserted events
+ *  truncates recompute_requests as well
+ *  inserts events including is_late column (default false for seeded data)
+ *  uses RETURNING to get actual inserted rows
+ *  writes ingestion_log entries for inserted events
  */
 async function seedData(options = {}) {
   const totalEvents = options.totalEvents ? Number(options.totalEvents) : sizeToCount(options.size);
@@ -26,7 +26,7 @@ async function seedData(options = {}) {
     await client.query('BEGIN');
 
     // truncate all relevant tables for a clean demo state
-    await client.query('TRUNCATE TABLE recompute_requests, ingestion_log, events, workers, workstations RESTART IDENTITY CASCADE');
+    await client.query('TRUNCATE TABLE recompute_requests, ingestion_log, metrics_cache, events, workers, workstations RESTART IDENTITY CASCADE');
 
     //insert workers & workstations
     const workers = [

@@ -11,9 +11,13 @@ const pino = require("pino");
 
 const requestLogger = require("./middleware/requestLogger");
 const errorHandler = require("./middleware/errorHandler");
+
 const setupRoutes = require("./routes/setupRoutes");
 const eventsRoutes = require("./routes/eventsRoutes");
 const recomputeRoutes = require("./routes/recomputeRoutes"); 
+const metricsRoutes = require('./routes/metricsRoutes');
+const metricsAdminRoutes = require('./routes/metricsAdminRoutes');
+
 const db = require("./db");
 
 const logger = pino();
@@ -42,6 +46,8 @@ app.use("/api/events", ingestLimiter);
 app.use("/api", setupRoutes);
 app.use("/api", eventsRoutes);
 app.use("/api", recomputeRoutes);
+app.use('/api', metricsRoutes);
+app.use('/api', metricsAdminRoutes);
 
 // health / readiness probe 
 app.get("/api/health", async (req, res) => {

@@ -79,7 +79,7 @@ function validateAndNormalizeEvent(body) {
 
 
 /**
- * Non-throwing validator used for bulk ingestion
+ * validator used for bulk ingestion
  * Returns { ok: true, normalized } or { ok: false, error: '.....' }
  */
 function validateEventSafe(body) {

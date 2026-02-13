@@ -1,6 +1,15 @@
-const db = require('../db');
+const db = require('../../db');
 
 async function createTables() {
+
+
+  // ensure uuid generator is available (pgcrypto)
+  try {
+    await db.query(`CREATE EXTENSION IF NOT EXISTS "pgcrypto"`);
+  } catch (err) {
+    console.warn('Could not create pgcrypto extension (may already exist or insufficient privileges)', err.message || err);
+  }
+
   // Workers
   await db.query(`
     CREATE TABLE IF NOT EXISTS workers (
@@ -69,6 +78,27 @@ async function createTables() {
       UNIQUE(entity_type, entity_id, window_start)
     );
   `);
+
+   // add migration-safe updated_at column for recompute_requests
+    await db.query(`
+      ALTER TABLE recompute_requests
+      ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    `);
+
+  // Metrics cache table for precomputed metrics
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS metrics_cache (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      entity_type TEXT NOT NULL,         -- 'worker' | 'workstation' | 'factory'
+      entity_id TEXT NOT NULL,           -- use 'FACTORY' for factory-level metrics
+      window_start TIMESTAMPTZ NOT NULL,
+      window_end TIMESTAMPTZ NOT NULL,
+      metrics JSONB NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(entity_type, entity_id, window_start, window_end)
+    );
+  `);
+   
 }
 
 module.exports = { createTables };
