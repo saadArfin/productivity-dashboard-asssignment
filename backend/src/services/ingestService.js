@@ -3,13 +3,19 @@ const db = require('../db');
 const pino = require('pino');
 const Sentry = require('@sentry/node');
 const logger = pino();
-
+const { checkIfLateEvent } = require('./lateEventService');
 /**
  * Insert a single normalized event assumes validation done
  * Returns { inserted: boolean, event_id }
  */
 async function insertSingleEvent(ev) {
- 
+
+  try {
+  await checkIfLateEvent(ev);
+  } catch (lateErr) {
+    logger.warn({ lateErr }, 'late check failed (non-blocking)');
+  }
+  
   const sql = `
     INSERT INTO events (
       event_id, timestamp, worker_id, workstation_id, event_type,

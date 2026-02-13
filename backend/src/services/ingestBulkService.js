@@ -2,7 +2,7 @@ const db = require('../db');
 const pino = require('pino');
 const Sentry = require('@sentry/node');
 const { validateEventSafe } = require('./validators');
-
+const { checkIfLateEvent } = require('./lateEventService');
 const logger = pino();
 
 /**
@@ -33,6 +33,7 @@ async function insertBulkEvents(rawEvents, options = {}) {
       invalidRows.push({ index: idx, error: v.error, raw: ev });
     } else {
       validated.push(v.normalized);
+      checkIfLateEvent(v.normalized).catch(() => {});
     }
   });
 
