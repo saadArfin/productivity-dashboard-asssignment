@@ -84,7 +84,7 @@ async function computeWorkerMetrics(worker_id, start, end) {
     WHERE worker_id = $1
       AND event_type = 'product_count'
       AND timestamp >= $2::timestamptz
-      AND timestamp < $3::timestamptz;
+      AND timestamp <= $3::timestamptz;
   `;
 
   const stateRes = await db.query(stateDurSql, [worker_id, wstart, wend]);
@@ -176,7 +176,7 @@ async function computeWorkstationMetrics(workstation_id, start, end) {
     WHERE workstation_id = $1
       AND event_type = 'product_count'
       AND timestamp >= $2::timestamptz
-      AND timestamp < $3::timestamptz;
+      AND timestamp <= $3::timestamptz;
   `;
 
   const durRes = await db.query(wsDurationSql, [workstation_id, wstart, wend]);
@@ -266,7 +266,7 @@ async function computeFactoryMetrics(start, end) {
     FROM events
     WHERE event_type = 'product_count'
       AND timestamp >= $1::timestamptz
-      AND timestamp < $2::timestamptz;
+      AND timestamp <= $2::timestamptz;
   `;
 
   // 3) number of workers (real)
