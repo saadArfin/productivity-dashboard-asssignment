@@ -303,9 +303,39 @@ async function computeFactoryMetrics(start, end) {
   };
 }
 
+async function getWorkerHourlySeries(workerId, startIso, endIso) {
+  const start = startIso || '2026-01-15T09:00:00Z';
+  const end = endIso || '2026-01-15T17:00:00Z';
+
+  const sql = `
+    SELECT
+      gs AS hour,
+      COALESCE(t.units, 0) AS units
+    FROM generate_series(
+      date_trunc('hour', $2::timestamptz),
+      date_trunc('hour', $3::timestamptz),
+      '1 hour'
+    ) AS gs
+    LEFT JOIN (
+      SELECT date_trunc('hour', timestamp) AS hour, SUM(count) AS units
+      FROM events
+      WHERE worker_id = $1
+        AND timestamp >= $2::timestamptz
+        AND timestamp <= $3::timestamptz
+        AND event_type = 'product_count'
+      GROUP BY hour
+    ) t ON t.hour = gs
+    ORDER BY gs;
+  `;
+
+  const res = await db.query(sql, [workerId, start, end]);
+  // return array of { hour: ISO, units: number }
+  return res.rows.map(r => ({ hour: r.hour.toISOString?.() ?? r.hour, units: Number(r.units) }));
+}
 
 module.exports = {
   computeWorkerMetrics,
   computeWorkstationMetrics,
-  computeFactoryMetrics
+  computeFactoryMetrics,
+  getWorkerHourlySeries
 };

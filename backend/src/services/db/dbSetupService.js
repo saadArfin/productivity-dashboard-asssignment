@@ -56,7 +56,8 @@ async function createTables() {
   await db.query(`CREATE INDEX IF NOT EXISTS idx_events_time ON events (timestamp);`);
   await db.query(`CREATE INDEX IF NOT EXISTS idx_events_worker ON events (worker_id);`);
   await db.query(`CREATE INDEX IF NOT EXISTS idx_events_workstation ON events (workstation_id);`);
-
+  await db.query(`CREATE INDEX IF NOT EXISTS idx_events_worker_time ON events (worker_id, timestamp);`);
+  
   // Ingestion log(for dedupe)
   await db.query(`
     CREATE TABLE IF NOT EXISTS ingestion_log (
