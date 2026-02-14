@@ -1,0 +1,19 @@
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY backend/package*.json ./
+RUN npm install --production
+
+COPY backend .
+
+EXPOSE 4000
+
+ENV NODE_ENV=production
+
+# Healthcheck for container orchestrators (optional, but good for Render)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+	CMD wget --spider -q http://localhost:4000/api/health || exit 1
+
+CMD ["node", "src/server.js"]

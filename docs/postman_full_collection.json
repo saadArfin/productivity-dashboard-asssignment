@@ -1,280 +1,170 @@
 {
   "info": {
-    "name": "Worker Productivity Dashboard - Full API Collection",
-    "_postman_id": "0c0e6d67-collection-full",
-    "description": "Full set of backend endpoints for the Worker Productivity Dashboard. Set {{baseUrl}} to http://localhost:4000",
+    "name": "AI Worker Productivity Dashboard API",
+    "_postman_id": "b9e6a7a2-9c9c-4c3f-9c0f-1f3b7e8e9abc",
+    "description": "Full API collection for setup, ingestion, metrics, cache, recompute and debug endpoints.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api" },
+    { "key": "start", "value": "2026-01-15T09:00:00Z" },
+    { "key": "end", "value": "2026-01-15T17:00:00Z" }
+  ],
   "item": [
     {
-      "name": "01 - POST /api/setup-db (apply migrations)",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/setup-db",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "setup-db"]
-        }
-      }
-    },
-    {
-      "name": "02 - POST /api/seed?size=medium (seed ~300)",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/seed?size=medium",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "seed"],
-          "query": [{"key":"size","value":"medium"}]
-        }
-      }
-    },
-    {
-      "name": "03 - GET /api/debug/counts",
+      "name": "Health",
       "request": {
         "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/debug/counts",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "debug", "counts"]
-        }
+        "url": "{{baseUrl}}/health"
       }
     },
     {
-      "name": "04 - GET /api/health",
+      "name": "Setup DB",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/setup-db"
+      }
+    },
+    {
+      "name": "Seed Medium",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/seed?size=medium"
+      }
+    },
+    {
+      "name": "Seed Heavy",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/seed?size=heavy"
+      }
+    },
+    {
+      "name": "Debug Counts",
       "request": {
         "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/health",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "health"]
-        }
+        "url": "{{baseUrl}}/debug/counts"
       }
     },
+
     {
-      "name": "05 - POST /api/events (insert newer event - not late)",
+      "name": "Ingest Single Event (product_count)",
       "request": {
         "method": "POST",
-        "header": [{"key":"Content-Type","value":"application/json"}],
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/events",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"timestamp\": \"2026-01-15T18:00:00Z\",\n  \"worker_id\": \"W1\",\n  \"workstation_id\": \"S1\",\n  \"event_type\": \"working\",\n  \"confidence\": 0.95\n}"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/api/events",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "events"]
+          "raw": "{\n  \"timestamp\": \"2026-01-15T10:15:00Z\",\n  \"worker_id\": \"W1\",\n  \"workstation_id\": \"S3\",\n  \"event_type\": \"product_count\",\n  \"confidence\": 0.93,\n  \"count\": 2\n}"
         }
       }
     },
     {
-      "name": "06 - POST /api/events (insert older event - late)",
+      "name": "Ingest Single Event (state working)",
       "request": {
         "method": "POST",
-        "header": [{"key":"Content-Type","value":"application/json"}],
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/events",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"timestamp\": \"2026-01-15T08:30:00Z\",\n  \"worker_id\": \"W1\",\n  \"workstation_id\": \"S1\",\n  \"event_type\": \"idle\",\n  \"confidence\": 0.9\n}"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/api/events",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "events"]
+          "raw": "{\n  \"timestamp\": \"2026-01-15T10:20:00Z\",\n  \"worker_id\": \"W1\",\n  \"workstation_id\": \"S3\",\n  \"event_type\": \"working\",\n  \"confidence\": 0.91\n}"
         }
       }
     },
     {
-      "name": "07 - POST /api/events/bulk (mixed valid/invalid/late)",
+      "name": "Ingest Late Event (older timestamp)",
       "request": {
         "method": "POST",
-        "header": [{"key":"Content-Type","value":"application/json"}],
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/events",
         "body": {
           "mode": "raw",
-          "raw": "[\n  {\n    \"timestamp\": \"2026-01-15T19:00:00Z\",\n    \"worker_id\": \"W2\",\n    \"workstation_id\": \"S2\",\n    \"event_type\": \"working\",\n    \"confidence\": 0.9\n  },\n  {\n    \"timestamp\": \"2026-01-15T07:45:00Z\",\n    \"worker_id\": \"W2\",\n    \"workstation_id\": \"S2\",\n    \"event_type\": \"idle\",\n    \"confidence\": 0.85\n  },\n  {\n    \"timestamp\": \"bad-date\",\n    \"worker_id\": \"W3\",\n    \"workstation_id\": \"S3\",\n    \"event_type\": \"working\"\n  }\n]"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/api/events/bulk",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "events", "bulk"]
+          "raw": "{\n  \"timestamp\": \"2026-01-15T08:30:00Z\",\n  \"worker_id\": \"W1\",\n  \"workstation_id\": \"S3\",\n  \"event_type\": \"product_count\",\n  \"confidence\": 0.88,\n  \"count\": 1\n}"
         }
       }
     },
     {
-      "name": "08 - GET /api/recompute/pending (view pending recompute queue)",
+      "name": "Bulk Ingest Events",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/events/bulk",
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"timestamp\": \"2026-01-15T10:15:00Z\",\n    \"worker_id\": \"W2\",\n    \"workstation_id\": \"S2\",\n    \"event_type\": \"working\",\n    \"confidence\": 0.92\n  },\n  {\n    \"timestamp\": \"2026-01-15T10:18:00Z\",\n    \"worker_id\": \"W2\",\n    \"workstation_id\": \"S2\",\n    \"event_type\": \"product_count\",\n    \"confidence\": 0.9,\n    \"count\": 3\n  },\n  {\n    \"timestamp\": \"bad-date\",\n    \"worker_id\": \"W2\",\n    \"workstation_id\": \"S2\",\n    \"event_type\": \"working\",\n    \"confidence\": 0.8\n  }\n]"
+        }
+      }
+    },
+
+    {
+      "name": "Get Pending Recompute Requests",
       "request": {
         "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/recompute/pending",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "recompute", "pending"]
-        }
+        "url": "{{baseUrl}}/recompute/pending"
       }
     },
     {
-      "name": "09 - POST /api/metrics/recompute (process pending recomputes)",
+      "name": "Process Recompute Requests",
       "request": {
         "method": "POST",
-        "header": [{"key":"Content-Type","value":"application/json"}],
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/metrics/recompute",
         "body": {
           "mode": "raw",
           "raw": "{ \"limit\": 50 }"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/api/metrics/recompute",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "metrics", "recompute"]
         }
       }
     },
+
     {
-      "name": "10 - GET /api/metrics/worker/:id (live compute)",
+      "name": "Worker Metrics (compute)",
       "request": {
         "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/metrics/worker/W1?start=2026-01-15T09:00:00Z&end=2026-01-15T17:00:00Z",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "metrics", "worker", "W1"],
-          "query": [
-            {"key":"start","value":"2026-01-15T09:00:00Z"},
-            {"key":"end","value":"2026-01-15T17:00:00Z"}
-          ]
-        }
+        "url": "{{baseUrl}}/metrics/worker/W1?start={{start}}&end={{end}}"
       }
     },
     {
-      "name": "11 - GET /api/metrics/workstation/:id (live compute)",
+      "name": "Workstation Metrics (compute)",
       "request": {
         "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/metrics/workstation/S1?start=2026-01-15T09:00:00Z&end=2026-01-15T17:00:00Z",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "metrics", "workstation", "S1"],
-          "query": [
-            {"key":"start","value":"2026-01-15T09:00:00Z"},
-            {"key":"end","value":"2026-01-15T17:00:00Z"}
-          ]
-        }
+        "url": "{{baseUrl}}/metrics/workstation/S1?start={{start}}&end={{end}}"
       }
     },
     {
-      "name": "12 - GET /api/metrics/factory (live compute)",
+      "name": "Factory Metrics (compute)",
       "request": {
         "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/metrics/factory?start=2026-01-15T09:00:00Z&end=2026-01-15T17:00:00Z",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "metrics", "factory"],
-          "query": [
-            {"key":"start","value":"2026-01-15T09:00:00Z"},
-            {"key":"end","value":"2026-01-15T17:00:00Z"}
-          ]
-        }
+        "url": "{{baseUrl}}/metrics/factory?start={{start}}&end={{end}}"
+      }
+    },
+
+    {
+      "name": "Worker Metrics (cache read)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/metrics/cache/worker/W1?start={{start}}&end={{end}}"
       }
     },
     {
-      "name": "13 - GET /api/metrics/cache/worker/:id (cache-read, populate=false)",
+      "name": "Worker Metrics (cache populate)",
       "request": {
         "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/metrics/cache/worker/W1?start=2026-01-15T09:00:00Z&end=2026-01-15T17:00:00Z",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "metrics", "cache", "worker", "W1"],
-          "query": [
-            {"key":"start","value":"2026-01-15T09:00:00Z"},
-            {"key":"end","value":"2026-01-15T17:00:00Z"}
-          ]
-        }
+        "url": "{{baseUrl}}/metrics/cache/worker/W1?start={{start}}&end={{end}}&populate=true"
       }
     },
     {
-      "name": "14 - GET /api/metrics/cache/worker/:id (cache-read & populate=true)",
+      "name": "Workstation Metrics (cache populate)",
       "request": {
         "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/metrics/cache/worker/W1?start=2026-01-15T09:00:00Z&end=2026-01-15T17:00:00Z&populate=true",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "metrics", "cache", "worker", "W1"],
-          "query": [
-            {"key":"start","value":"2026-01-15T09:00:00Z"},
-            {"key":"end","value":"2026-01-15T17:00:00Z"},
-            {"key":"populate","value":"true"}
-          ]
-        }
+        "url": "{{baseUrl}}/metrics/cache/workstation/S1?start={{start}}&end={{end}}&populate=true"
       }
     },
     {
-      "name": "15 - GET /api/metrics/cache/workstation/:id (populate=true)",
+      "name": "Factory Metrics (cache populate)",
       "request": {
         "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/metrics/cache/workstation/S1?start=2026-01-15T09:00:00Z&end=2026-01-15T17:00:00Z&populate=true",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "metrics", "cache", "workstation", "S1"],
-          "query": [
-            {"key":"start","value":"2026-01-15T09:00:00Z"},
-            {"key":"end","value":"2026-01-15T17:00:00Z"},
-            {"key":"populate","value":"true"}
-          ]
-        }
+        "url": "{{baseUrl}}/metrics/cache/factory?start={{start}}&end={{end}}&populate=true"
       }
-    },
-    {
-      "name": "16 - GET /api/metrics/cache/factory (populate=true)",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/metrics/cache/factory?start=2026-01-15T09:00:00Z&end=2026-01-15T17:00:00Z&populate=true",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "metrics", "cache", "factory"],
-          "query": [
-            {"key":"start","value":"2026-01-15T09:00:00Z"},
-            {"key":"end","value":"2026-01-15T17:00:00Z"},
-            {"key":"populate","value":"true"}
-          ]
-        }
-      }
-    },
-    {
-      "name": "17 - GET /api/recompute/pending (verify done/pending after recompute)",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/recompute/pending",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "recompute", "pending"]
-        }
-      }
-    },
-    {
-      "name": "18 - GET /debug-sentry (test Sentry error capture)",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/debug-sentry",
-          "host": ["{{baseUrl}}"],
-          "path": ["debug-sentry"]
-        }
-      }
-    }
-  ],
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:4000"
     }
   ]
 }
